@@ -44,17 +44,17 @@ best <- function (state,  outcome)
                     "Pneumonia" = table$Hospital.30.Day.Death..Mortality..Rates.from.Pneumonia) 
   
   
-          if(outcome == 'heart attack') {
+          if(outcome == 'heart attack') 
+          {
             i <- 3
           }
-          else if(outcome == 'heart failure') {
+          else if(outcome == 'heart failure') 
+          {
             i <- 4
           }
-          else if(outcome == 'pneumonia') {
+          else
+          {
             i <- 5
-          }
-          else {
-            stop('invalid outcome')
           }
 
   
