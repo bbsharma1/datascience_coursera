@@ -1,0 +1,25 @@
+---
+title: "Hospital"
+author: "Bbsharma1"
+date: "4/11/2020"
+output: html_document
+---
+
+```{r}
+## set working directory 
+setwd("~/Documents/RStudio/datascience_coursera/Week4/rprog_data_ProgAssignment3-data/")
+getwd()
+```
+
+
+```{r}
+## Read outcome data and view histogram of death rates
+
+outcome <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+head(outcome)
+
+death_rates_heartattack <- as.numeric(outcome[,11])
+hist(death_rates_heartattack, col = 4)
+
+```
+

@@ -1,0 +1,87 @@
+---
+title: "Quiz3"
+author: "Bbsharma1"
+date: "4/8/2020"
+output: html_document
+---
+
+```{r}
+# 1. Take a look at the 'iris' dataset that comes with R
+# There will be an object called 'iris' in your workspace. In this dataset, what is the mean of 'Sepal.Length' for the species virginica? 
+# Please round your answer to the nearest whole number.
+# (Only enter the numeric result and nothing else.)
+species <- split(iris$Sepal.Length, iris$Species) ## splits table into the different sections of species
+species
+sapply(species,  mean) ## finds the mean of each
+
+```
+
+
+
+```{r}
+# 2. Continuing with the 'iris' dataset from the previous Question, 
+# what R code returns a vector of the means of the variables 'Sepal.Length', 'Sepal.Width', 'Petal.Length', and 'Petal.Width'?
+values <- iris[, 1:4] ##excludes the Species column
+values
+apply(values, 2, mean)  ## for apply, the parameter '2' performs calculations on columns. 
+
+```
+
+
+
+
+```{r}
+# 3. Load the 'mtcars' dataset in R with the following code: library(datasets) & data(mtcars)
+#  There will be an object names 'mtcars' in your workspace. You can find some information about the dataset by running ?mtcars
+# How can one calculate the average miles per gallon (mpg) by number of cylinders in the car (cyl)? Select all that apply.
+
+# lapply(mtcars, mean) --> computes mean for every column and outputs as a  list. Not what we want.
+# apply(mtcars, 2, mean) --> computes mean for every column as vector
+# with(mtcars, tapply(mpg, cyl, mean)) --> works!
+# split(mtcars, mtcars$cyl) --> splits all the sections by cylinder, which is good but doesnt compute mean
+# tapply(mtcars$mpg, mtcars$cyl, mean) --> works!
+# tapply(mtcars$cyl, mtcars$mpg, mean) --> not subsetting by cyl but via mpg, which is incorrect
+# sapply(split(mtcars$mpg, mtcars$cyl), mean) --> works!
+# mean(mtcars$mpg, mtcars$cyl) --> even if  this  worked, wouldnt sort by cylinders, it would only compute
+# sapply(mtcars, cyl, mean) --> syntax is incorrect, will not find  the cyl nor mean column.
+
+mpg1 <- with(mtcars, tapply(mpg, cyl, mean))
+mpg2 <- tapply(mtcars$mpg, mtcars$cyl, mean)
+mpg3 <- sapply(split(mtcars$mpg, mtcars$cyl), mean)
+mpg1; mpg2; mpg3
+
+```
+
+
+```{r}
+# 4. Continuing with the 'mtcars' dataset from the previous Question, what is the absolute difference between the average horsepower of 4-cylinder cars and the average horsepower of 8-cylinder cars?
+# (Please round your final answer to the nearest whole number. Only enter the numeric result and nothing else.)
+
+  #absolute differnce = abs(x  - y)
+  #split between cylinders, compute mean of 4 cyl and 8 cyl, abs difference of that.
+
+  cyls <- split(mtcars$hp, mtcars$cyl)
+  #cyls
+  meann <- mean(cyls$`4`)
+  four_cyl <- mean(cyls$`4`)
+  eight_cyl <- mean(cyls$`8`)
+  absdif <- abs(four_cyl - eight_cyl)
+  absdif
+
+```
+
+
+
+```{r}
+# 5. If you run debug(ls)
+# what happens when you next call the 'ls' function?
+# You will be prompted to specify at which line of the function you would like to suspend execution and enter the browser.
+# The 'ls' function will execute as usual.
+# Execution of 'ls' will suspend at the beginning of the function and you will be in the browser.
+# The 'ls' function will return an error.
+
+
+debug(ls)
+
+```
+

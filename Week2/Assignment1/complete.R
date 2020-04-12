@@ -23,7 +23,7 @@ complete <- function (directory, id = 1:332) {
   #allfiles
   workingfile <- data.frame()
   
-  ## Will need to read every row of the file/files and count how manyy have complete values, where id is the fileid,
+  ## Will need to read every row of the file/files and count how many have complete values, where id is the fileid,
   ## and nobs is the number of  lines that has complete data in the file.
   ## complete.cases can be used to output non NA values
   
