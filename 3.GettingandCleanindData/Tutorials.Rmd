@@ -1,0 +1,275 @@
+---
+title: "Tutorials"
+author: "Bbsharma1"
+date: "4/16/2020"
+output: html_document
+---
+
+# Week 3
+
+## Melting Data Frames
+```{r}
+#Start with reshaping
+library(reshape2)
+mtcars
+
+
+## This takes all of the car names from every row 
+mtcars$carname <- rownames(mtcars)
+class(mtcars$carname)
+
+## This splits the 3 columns ("carname", "gear", "cyl") to only display its mpg and hp
+carMelt <- melt(mtcars, id = c("carname", "gear", "cyl"), measure.vars = c("mpg", "hp"))
+carMelt[carMelt$carname %in% "Mazda RX4", ] #example
+```
+
+
+## Casting Data Frames
+```{r}
+
+## Summarizes the dataset. Where 'cyl' is the rows and 'variable' is the column.  
+cylData <- dcast(carMelt, cyl ~ variable)
+cylData
+## As you can see, for cyl = 4, there are 11 measures of mpg and hp included 
+
+
+## We can pass it more functions such as taking the mean
+cylData_mean <- dcast(carMelt, cyl ~ variable, mean)
+cylData_mean
+
+```
+
+## Managing Data Frames with dyplr - introduction 
+
+```{r}
+## possible functions: arrange, filter, select, mutate, rename
+
+## Load package 
+# library(dplyr)
+
+chicago <- readRDS("./Tutorial_files/chicago.rds")
+chicago
+names(chicago)
+
+
+
+```
+
+
+```{r}
+########## Select ##########
+## Select all columns between city and dptp 
+select(chicago, city:dptp)
+
+## Select all columns except city and dptp 
+select(chicago, -(city:dptp))
+
+```
+
+
+```{r}
+########## Filte r##########
+## Filter with one condition
+filter(chicago, pm25tmean2 > 30)
+
+## Filtering with multiple conditions
+filter(chicago, pm25tmean2 > 30 & tmpd > 80)
+
+```
+
+
+```{r}
+########## Arrange ##########
+## Dataset is ordered by increasing dates
+arrange(chicago, date)
+
+## Dataset is ordered by decreasing dates
+arrange(chicago, desc(date))
+
+```
+
+
+```{r}
+########## Rename ##########
+## rename(df, new_name = old_name)
+
+chicago <- rename(chicago, pm25 = pm25tmean2, dewpoint = dptp)
+chicago
+
+```
+
+
+```{r}
+########## Mutate ##########
+## used for: transform existing variables/create new variables 
+
+## Create a new column called dptp_detrend where you add the dtpt value to its mean
+chicago <- mutate(chicago, pm25detrend=pm25-mean(pm25, na.rm=TRUE))
+head(select(chicago, pm25, pm25detrend))
+
+```
+
+```{r}
+########## Group By ##########
+## revisit
+
+```
+
+
+
+
+## Merging Data 
+```{r}
+########## Download File ##########
+fileUrl1 ="http://www.sharecsv.com/dl/e70e9c289adc4b87c900fdf69093f996/reviews.csv"
+fileUrl2 ="http://www.sharecsv.com/dl/0863fd2414355555be0260f46dbe937b/solutions.csv"
+download.file(fileUrl1,destfile = "./Tutorial_files/reviews.csv", mode="wb")
+download.file(fileUrl2,destfile = "./Tutorial_files/solutions.csv", mode="wb")
+reviews = read.csv("./Tutorial_files/reviews.csv"); solutions <- read.csv("./Tutorial_files/solutions.csv")
+head(reviews,2)
+head(solutions,2)
+
+```
+
+```{r}
+## view files
+names(reviews)
+names(solutions)
+# Common names we see are: id, start, stop, time left. By default, merge will merge all with common names
+
+## Merge data by common id
+
+mergedData <- merge(reviews, solutions, by.x = "solution_id", by.y = "id", all = TRUE)
+head(mergedData)
+```
+
+```{r}
+## Lets see if we were to merge default by all common column names
+intersect(names(solutions), names(reviews))
+
+#Common names we see are: id, start, stop, time left.
+
+mergedData2 <- merge(reviews, solutions, all = TRUE)
+head(mergedData2)
+
+#### The problem here and often can be that the id corresponding to each file may be for different purposes, as in id for reviews is not the same person for id in solutions, so we will get replicated data that will mess up the data naalysis
+
+```
+
+
+
+
+
+
+
+
+
+# Week 4 - Editing Text Variables
+
+```{r}
+#download and read the file
+setwd("/Users/bishal/Documents/RStudio/datascience_coursera/3.GettingandCleanindData/Tutorial_files/")
+fileUrl <- "https://data.baltimorecity.gov/api/views/dz54-2aru/rows.csv?accessType=DOWNLOAD"
+download.file(fileUrl,destfile="cameras.csv",method="curl")
+BalitCamera_dwtime <- date()
+
+cameraData <- read.csv("./Tutorial_files/cameras.csv")
+cameraData
+
+```
+
+## Splitting Text String
+```{r}
+# There are a few cases where the first letter or another letter in the name is uppercase. 
+names(cameraData)
+
+## We can lowercase it by: 
+tolower(names(cameraData))
+
+
+## We can also seperate strings that have certian characters.
+## From names(cameraData), we also see 'Location.1'. To split it:
+## the \\ represents escape and the '.' represents the identifier that we will use to split
+splitNames <- strsplit(names(cameraData), "\\.")
+splitNames
+
+## We know have a list with the names and we see that 5th element is still intersection, while the 6th element has been updated
+## to "Location" "1"
+
+```
+
+
+#### Using Lists refresher
+```{r}
+mylist <- list(letters = c("A", "B", "C"), numbers = 1:3, matrix(1:25, ncol = 5))
+mylist
+
+## Below are the same way to select the first element in mylist
+mylist[1]
+mylist$letters
+mylist[[1]]
+
+## Selecting the first column within the 3rd element
+mylist[3][[1]][,1]
+
+```
+
+```{r}
+## Sapply -- applies a function to every element in a vector or a list
+
+## Selecting first element within 6th element (from above)
+splitNames[[6]][1]
+
+## Adter we split apart the names above using strsplit() functoin, we run this to remove the first element of a name that has been split.
+firstElement <- function(x){x[1]}
+sapply(splitNames, firstElement)
+
+```
+
+#### Sub and gsub
+```{r}
+## replacing text
+reviews = read.csv("./Tutorial_files/reviews.csv"); solutions <- read.csv("./Tutorial_files/solutions.csv")
+head(reviews,2)
+head(solutions,2)
+
+## in the column names, we can see that there are underscore when column has 2 parts, such as: problem_id, or subject_id. Lets remove those!
+removed <- sub("_", "", names(reviews))
+removed
+
+## DOES NOT WORK WITH multiple characters, only ONE!!
+testName <- "This_is_a_test"
+sub("_", "", testName)
+## Output is: "Thisis_a_test"
+
+```
+
+
+```{r}
+## gsub will remove all of those multiple characters!!
+testName2 <- "This_is_a_test"
+gsub("_", "", testName)
+# Output: "Thisisatest"
+
+
+
+```
+
+
+#### grep and grepl
+
+
+```{r}
+## grep() will return the elements that contain the text pattern
+grep("Alameda", cameraData$intersection)
+```
+
+
+
+
+```{r}
+## grepl() is used to reuturn logical 
+grepl("Alameda", cameraData$intersection) ## shows us all logical
+table(grepl("Alameda", cameraData$intersection))  ## summarizes that 
+
+```
