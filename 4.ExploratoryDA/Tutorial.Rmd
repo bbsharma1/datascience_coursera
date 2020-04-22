@@ -1,0 +1,321 @@
+---
+title: "Tutorial"
+author: "Bbsharma1"
+date: "4/19/2020"
+output: html_document
+---
+
+```{r}
+## Libraries
+library(filesstrings) ## to move/copy files in directory
+library(lattice) ## for plotting 
+library(ggplot2) ## for plotting
+```
+
+
+# Chapter 4 - Exploratory Data Analysis
+
+## Graphs
+```{r}
+# Download file
+
+fileUrl <- "https://raw.githubusercontent.com/jtleek/modules/master/04_ExploratoryAnalysis/exploratoryGraphs/data/avgpm25.csv"
+
+  if(!file.exists("./Tutorial_Files/EPA.csv") | !file.exists("./Tutorial_Files/archive/EPA.csv"))
+  {
+    download.file(fileUrl, destfile = "./Tutorial_Files/EPA.csv",  mode = "wb", method = "curl")
+    if(!file.exists("./Tutorial_Files/archive")){dir.create("./Tutorial_Files/archive")}
+    file.copy("./Tutorial_Files/EPA.csv", "./Tutorial_Files/archive/")  ## backup original file
+    EPA_dw_time <- date()
+    print("File downloaded")
+  } else {
+      print("file found, not downloading")
+    }
+```
+
+```{r}
+# Read File
+
+epa_pp <- read.csv("./Tutorial_Files/EPA.csv", colClasses = c("numeric", "character", "factor", "numeric", "numeric"))
+epa_pp
+## pm25 is the 3 year average (2008 - 2010)
+## fips: county identifier
+## long/lat is coordinates for the monitoring device
+
+summary(epa_pp)
+## initially we can see that the max is 18.441 meaning there is a location where they are way above 12 limit
+```
+
+#### plotting our data to view - Histogram
+```{r}
+
+hist(epa_pp$pm25, col = "green")
+
+## Observartion: Bulk of data is between 9 and 11
+
+hist(epa_pp$pm25, col = "green", breaks = 100)
+
+## Making the bars smaller and getting better visuals
+
+hist3 <- hist(epa_pp$pm25, col = "green")
+abline(v = 12, lwd = 2)
+abline(v = median(epa_pp$pm25), col = "magenta", lwd = 4)
+hist3
+## 'v = ' is vertical line, 'lwd' is line width
+## Histograms do not innatly show the median so we entered it outself.
+
+
+# Multiple Histograms
+
+par(mfrow = c(2,1), mar = c(4,4,2,1))
+hist_east <- hist(subset(epa_pp, region == "east")$pm25, col = "green")
+hist_west <- hist(subset(epa_pp, region == "west")$pm25, col = "green")
+##Western counties are lower in averagem but higher extreme values
+```
+
+#### plotting our data to view - Boxplot
+```{r}
+boxplot(epa_pp$pm25, col = "blue")
+abline(h = 12)
+## abline sets a line in graph, and we can see there are outliers. Upper quartile is 15, first quartile is at 4
+
+
+# MultipleBoxplot
+boxplot(pm25 ~ region, data = epa_pp, col = "red")
+## Observation: pm25 is higher on the east than on the west, however has larger spread (outliers exist at higher rates)
+##Observation: We use the R formula y ~ x to show that y  depends on x, so in this case, pm25 depends on region!
+```
+
+
+#### plotting our data to view - Barplot
+```{r}
+# Best for categorical data 
+
+barplot(table(epa_pp$region), col = "wheat", main = "Number of counties in each reigon")
+## Observation: As shown, we get a overview of the different reigons, and number of counties in each reagion
+## Observation: The table(epa_pp$riegon) will summarize the data 
+```
+
+
+#### plotting our data to view - Scatterplot
+```{r}
+
+plot1 <- with(epa_pp, plot(latitude, pm25))
+abline(h = 12, lwd = 2, lty = 2)
+## There is no particular trend here, but we can observe that pm25 is around 10-11 when lattitude is between 30 - 50
+
+# Adding Color
+plot2 <- with(epa_pp, plot(latitude, pm25, col = region))
+abline(h = 12, lwd = 2, lty = 2)
+## Observation: scatter plots are now seperated by reigons, east and west through black and red colors, respectively.
+
+
+
+#Multiple Scattor plots
+
+# We can do the above through different colors, or we can plot them seperatly like below:
+
+par(mfrow = c(1,2), mar = c(5,4,2,1))
+scat_west <- with(subset(epa_pp, region == "west"), plot(latitude, pm25, main = "West"))
+scat_east <- with(subset(epa_pp, region == "east"), plot(latitude, pm25, main = "East"))
+## Both cases, higher pollution counties tend to be in the middle lattitudes
+```
+
+
+
+## Plot
+
+
+### Lattice plot
+```{r}
+## using data found in lattice plot, lets plot the below: 
+state <- data.frame(state.x77, region = state.region)
+xyplot(Life.Exp ~ Income | region, data = state, layout = c(4,1))
+## Observation: indicates we're plotting life expectancy as it depends on income for each region
+
+```
+
+
+### ggplot2
+```{r}
+## using mpg data from ggplot package
+data(mpg)
+qplot(displ, hwy, data = mpg)
+## Observation: x asix is displ (engine size) and y axis is hiway milage for that car. We can see that as engine size increases,
+## Observation: hway mileage decreases
+```
+
+
+
+### Base Graphics 
+```{r}
+# Simple Histogram example
+
+library(datasets) ## load to  play with data
+histogram(airquality$Ozone)
+
+
+# Simple Scattor plot example 
+with(airquality, plot(Wind, Ozone))
+## Observation: Wind is X axis, Ozone is Y axis)
+
+
+# Simple boxplot example
+airquality <- transform(airquality, Month = factor(Month))
+boxplot(Ozone ~ Month, airquality, xlab = "Month", ylab = "Ozone (ppb)")
+## Observation: boxplot of distribution by month. X axis is Month, Y axis is ozone
+
+```
+
+
+#### Base scatter plots, adding annotation example
+```{r}
+
+with(airquality, plot(Wind, Ozone))
+## Observation: X label: Wind, Ylabel: Ozone. X axis - 0 - 20, y axis: 0 - 150.
+
+title(main = "Ozone and Wind in NY City")
+## Observation: Title given. Also, we must rerun the whole segment of code and not just this line.
+
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in NY City"))
+## Another way for the above, putting title directly into the plot
+
+```
+
+#### Scatterplot Annotation: Adding colors to different parts of the graph
+```{r}
+# Here, we will subset all of data points for the month of May to output a different color on the plot
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in NY City")) ## draw initial graph
+with(subset(airquality, Month == 5), points(Wind, Ozone, col = "blue"))
+```
+
+```{r}
+# Adding more variations to graph
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in NY City", type = "n")) ## draw initial graph where n signifies no data to be added
+with(subset(airquality, Month == 5), points(Wind, Ozone, col = "blue"))
+
+with(subset(airquality, Month != 5), points(Wind, Ozone, col = "red"))
+## Observation: Colors the remaining circles to red becuase Month not equal to 5
+
+legend("topright", pch = 1, col = c("blue", "red"), legend = c("May", "Other Months"))
+## Observation: legend box created on top right l ocation
+## Observation: Default (aka 1) plotting character is a circle, and the legend shows a circle next to the legend key.
+## Observation: colors correspond to the same order of the legend vector. May is blue, Other is red
+
+```
+
+
+#### Scatterplot Annotation: Adding Regression Line
+```{r}
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in NY City", pch = 20)) ## draw initial graph
+model <- lm(Ozone ~ Wind, airquality) ## where lm is linear model
+abline(model, lwd = 2)
+## Observation: Regression line included 
+
+
+```
+
+
+### Base Graphics - Multiple base plots examples
+```{r}
+par(mfrow  = c(1,2))
+with(airquality, 
+     { 
+       plot(Wind, Ozone, main = " Ozone and Wind")
+       plot(Solar.R, Ozone, main = "Ozone and Solar Radiation")
+     })
+## Observation: par set 1 row with  2 columns  (We could have also done mfcol = c(1,2)) to achieve same result
+## Observation: 2 plots, both have Ozone as Y axis
+
+```
+
+
+```{r}
+# Another example with a 3rd plot
+par(mfrow  = c(1,3), mar = c(4, 4, 2, 1), oma = c(0, 0, 2, 0))
+with(airquality, 
+     { 
+       plot(Wind, Ozone, main = " Ozone and Wind")
+       plot(Solar.R, Ozone, main = "Ozone and Solar Radiation")
+       plot(Temp, Ozone, main = "Ozone and Temperature")
+       mtext("Ozone and Weather in NYC", outer = TRUE)
+     })
+## Observation: Accidently entered mfrow to be (1,2) in which it output the last plot on a seperate output.
+## Observation: mtext is for master text, and it is there because we set outer marging to 0 0 2 0
+```
+
+
+## Base Plot Video Demonstration Follow
+```{r}
+# Creating random normal distributions 
+x <- rnorm(100)
+hist(x)
+## Observation: Without actually specifying anything, default labels appear
+
+y <- rnorm(100)
+plot(x,y)
+## Observation: Without actually specifying anything, default labels appear (except for title)
+```
+
+
+#### examples of using points
+```{r}
+example("points")
+## Observation: will show different ways  to use points
+```
+
+
+#### Adding text to plots
+```{r}
+# Create random numbers
+a <- rnorm(100)
+b <- rnorm(100)
+plot(a,b)
+
+text(-2, -2, "test")
+## Observation: Adds text to the indicated coordinates
+
+legend("topleft", legend = "Data", pch = 5)
+## Observation: Creats a legend on top left  with label Data using diamond symbol. 
+
+regression <- lm(b ~ a)
+abline(regression, col = "blue")
+## Observation: Created linear regression onto the plot
+```
+
+
+```{r}
+
+par(mfrow  = c(1,1))
+## Observation: Setting up our area to view plots
+
+x <- rnorm(100)
+y <- x + rnorm(100)
+## Observation: Random data  created
+
+g <- gl(2,50)
+## Observation: Group with 2 levels, 50 iterations each
+
+g <- gl(2,50, labels = c("Male", "Female"))
+## ## Observation: Same as above, but we are including labels (as shown by str(g))
+str(g)
+
+
+# Now we want to PLOT, here are the steps:
+
+#1. Set  up the plotting region with no parameters
+plot(x, y, type = "n")
+
+#2. Add male group first
+points(x[g == "Male"], y[g =="Male"], col = "green")
+
+#3. Add female group
+points(x[g == "Female"], y[g =="Female"], col = "blue")
+## Observation: Blue circles for females, and green circles for males are  shown 
+```
+
+
+
+
+
+
