@@ -1,0 +1,194 @@
+---
+title: "Tutorial - Reproducible Research"
+author: "Bbsharma1"
+date: "4/27/2020"
+output: html_document
+---
+
+
+# Chapter 5 - Reproducible Research
+
+# Week 1
+
+
+## Structure of Data Analysis
+
+### Prediction Email spam example
+
+#### What we will do: build a model to classify emails as spam
+####  split dataset into test set and training set
+####  use part of dataset to build model
+####  then use another part of dataset independent of first to deteremine how good our model is at making prediction
+```{r}
+## Install and Load dataset
+install.packages("kernlab")
+library(kernlab)
+```
+
+```{r}
+# Read data
+data(spam)
+
+#Subsampling
+set.seed(3435)
+trainIndicator <- rbinom(4601, size = 1, prob = .5)
+table(trainIndicator)
+## Observation: Taking a random half of the dataset (flipping coin with rbinom function with 50% probability) to seperate the dataset into 2 pieces
+## Observation: half of datasets are 2314 points, and other half is 2287
+
+trainSpam <- spam[trainIndicator == 1, ]
+testSpam <- spam[trainIndicator == 0, ]
+## Observation: Setting train and test sets set to the 1's value and test set as 0 values
+```
+
+```{r}
+# Step 1: Exploratory Data Analysis
+    ## Look at summaries
+    ## check for missing data
+    ## create exploratory plots
+    ## perform explatory analysis (such as clustering)
+
+names(spam)
+## Observation: Column names are all just words. 
+
+head(spam)
+## Observation: rows essentially show frequencys of those words in the emails. 
+## Observation: First row shows that the word 'make' is not used, but 'address', 'all', and 'our' is found within  that first email. The value indicated for those columns indicates frequency of that word in the email, so address is used .64 times
+
+    ## Summary
+table(trainSpam$type)
+## Observation: from the training dataset, there are 906 emails that were marked as spam
+## Observation: This is what we ill use to build of prediction model
+
+    ## Plots
+## Looking at first 4 columns' plots to look for any correlation 
+plot(log10(trainSpam[, 1:4] + 1))
+
+    ## Cluster
+hCluster <- hclust(dist(t(trainSpam[, 1:57])))
+plot(hCluster)
+## Observation: Not very helpful, but does seperate out capitalTotal. Redo this, but transform out the predictor space (type)
+
+hClusterUpdated <- hclust(dist(t(log10(trainSpam[, 1:55] + 1))))
+plot(hClusterUpdated)
+## Observation: Removed the 3 items that skewed the data (the averages aka capitalTotal, capitalLong, capitalAve) (and type )
+## Observation: Added 1  to the log to avoid taking log of 0 
+## Observation: Seperated out a few cluster (capitalAve), another cluster at (will, you and your)
+```
+
+```{r}
+# Step 2: Statistical Prediction/Modeling
+    ## Should be informed by the result of the exploratory analysis
+    ## Exact methods depend on question that you are trying to answer
+    ## Transformation/processing should be accounted for when necessary 
+    ## Measures of uncertainty should be reported
+
+library(boot)
+trainSpam$numType = as.numeric(trainSpam$type) - 1
+## Observation: Sets 'not spam' to 0, and 'spam' to 1
+
+costFunction = function(x, y) sum(x != (y > 0.5))
+cvError = rep(NA, 55)
+
+## Go  through each variable in the dataset , try to fit generalized linear model (logistical regression in this case) in order to predict if the email is spam based on one single variable. 
+for (i in 1:55) {
+    lmFormula = reformulate(names(trainSpam)[i], response = "numType")
+    glmFit = glm(lmFormula, family = "binomial", data = trainSpam)
+    cvError[i] = cv.glm(trainSpam, glmFit, costFunction, 2)$delta[2]
+}
+## Which predictor has minimum cross-validated error rate?
+names(trainSpam)[which.min(cvError)]
+## Observation: This tells us that charDollar has lowest error rate to determine the emails that are spam, so we will use charDollar to compare with the other test set
+## Observation: Note here these are simple variable reference checks, and we  could build more complex ones if needed.
+
+    ## Transformation/processing
+## Use the best model from the group (charDollar)
+predictionModel <- glm(numType ~ charDollar, family = "binomial", data = trainSpam)
+## Observation: Logistical Regression doesnt output a 0 or 1, but rather a probability that the message is spam
+## Observation: glm is general logistical modeling
+
+## Get predictions on the test set
+predictionTest <- predict(predictionModel, testSpam)
+predictedSpam <- rep("nonspam", dim(testSpam)[1])
+## Observation: Logical regression creates a probability that something is or isnt, in this case is or is not spam
+
+## Classify as `spam' for those with prob > 0.5
+predictedSpam[predictionModel$fitted > 0.5] = "spam"
+
+    ## Measures of Uncertainty
+
+## Classification table of predicted and real values
+table(predictedSpam, testSpam$type)
+## Observation: 458 were marked as nonspam that were actually spam, and 61 were classified as spam that were not spam.
+
+##Calculate error rate
+((61 + 458) / (1346 + 61 + 458 + 449)) * 100
+## Observation: 22% error rate
+```
+
+```{r}
+# Step 3: Interpret Results
+    ## Use appropriate languages like predicts, correlations, etc
+    ## Give explanation
+    ##Interpret coefficients
+    ##Interpret measures of uncertainty
+
+#In our example:
+# The fraction of characters that are $ can be used to predict if an email is spam
+# anything with more than 6.6% dollar signs is classified as Spam
+# Under our prediction, more dollar signs means higher chance it is spam 
+# error rate for our prediction was 22%
+```
+
+```{r}
+# Step 4: Challenge Results
+    ## Challenge all leading steps:
+        ## Question
+        ## Data source
+        ## Processing & Analysis
+        ## Conclusions
+        ## Challenge measures of uncertainty
+    ## Challenge choices of terms to include in models
+    ## Think of potential alternative analyses
+    ## WHY? Someone else might challenge, so might as well be prepared and analyse yourself.
+
+```
+
+
+```{bash}
+# Step 5: Involves writing up the results
+    ## Lead with the question
+    ## Summarize the analysis into the report
+    ## Don't include  EVERY ANALYSIS. Include analysis if:
+        ## It is needed for the story
+        ## Needed to address a challenge.
+    ## Order analyses according to the story, rather than chronologically
+    ## Include "pretty" figures that contribute to the story
+
+
+#In our example:
+# Lead with the question
+    ## Can I use quantitative characteristics of the emails to classify them as SPAM/HAM?
+# Describe the approach
+    ## Collected data from UCI -> created training/test sets
+    ## Explored relationships
+    ## Choose logistic model on training set by cross validation
+    ## Applied to test, 78% test set accuracy
+# Interpret results
+    ## Number of dollar signs seems reasonable, e.g. "Make money with Viagra \$ \$ \$ \$!"
+# Challenge results
+    ## 78% isn't that great
+    ## I could use more variables
+    ## Why logistic regression?
+```
+
+
+```{r}
+# Step 6: Creating Reproducible Code
+# Skipping over this or not putting much effort  into  this may cause others to not validate your work or  trash it based on not being able to test it themselves.
+# Staying organized is key!
+```
+
+
+
+

@@ -10,10 +10,13 @@ output: html_document
 library(filesstrings) ## to move/copy files in directory
 library(lattice) ## for plotting 
 library(ggplot2) ## for plotting
+library(datasets) ## Loading some datasetst to play with
 ```
 
 
 # Chapter 4 - Exploratory Data Analysis
+
+#Week 1
 
 ## Graphs
 ```{r}
@@ -313,6 +316,888 @@ points(x[g == "Male"], y[g =="Male"], col = "green")
 points(x[g == "Female"], y[g =="Female"], col = "blue")
 ## Observation: Blue circles for females, and green circles for males are  shown 
 ```
+
+
+
+
+# Week 2
+## Lattice Plotting System
+```{r}
+# Simple Scatterplot Exapmle
+xyplot(Ozone ~ Wind, data = airquality)
+## Observation: Xlabel = Wind, Ylabel = Ozone. No title, circles are blue (default for lattice)
+
+# Multiple plots
+airquality <- transform(airquality, Month = factor(Month))
+xyplot(Ozone ~ Wind | Month, data = airquality, layout = c(5,1))
+## Observation: Convert Month to a factor 
+## Observation: Xlabel = Wind, Ylabel = Ozone
+## Observation: 5 Seperate plots for each Month,  each having its on x axis, with only 1 y axis
+
+```
+
+
+#### Lattice Panel Functions
+```{r}
+set.seed(10)
+x <- rnorm(100)
+f <- rep(0:1, 50)
+y <- x + f - f * x + rnorm(100, sd = .5)
+f <- factor(f, labels = c("Group 1", "Group 2"))
+xyplot(y ~ x | f, layout = c(2,1))
+## Observation: plots of x and y seperated by group 1 and group 2
+```
+
+#### Lattice Panel Custom Functions - Horizontal line
+```{r}
+# Using the same variables from above: 
+set.seed(10)
+x <- rnorm(100)
+f <- rep(0:1, 50)
+y <- x + f - f * x + rnorm(100, sd = .5)
+f <- factor(f, labels = c("Group 1", "Group 2"))
+
+xyplot(y ~ x | f, panel = function(x, y, ...)
+{
+  panel.xyplot(x, y, ...)   ## Calling the default panel function for xyplot
+  panel.abline(h = median(y), lty = 2)
+})
+## Observation: Created the same plot as before, but now included a horizontal line in the median of the y variable
+```
+
+
+
+#### Lattice Panel Custom Functions - Regression line
+```{r}
+# Adding a regression line to the plot
+set.seed(10)
+x <- rnorm(100)
+f <- rep(0:1, 50)
+y <- x + f - f * x + rnorm(100, sd = .5)
+f <- factor(f, labels = c("Group 1", "Group 2"))
+
+xyplot(y ~ x | f, panel = function(x, y, ...)
+{
+  panel.xyplot(x, y, ...)   ## Calling the default panel function for xyplot
+  panel.lmline(x,y, col = 2)
+})
+## Observation: Created the same plot as above, but now included a regression line for both groups
+```
+
+
+
+
+## ggplot2
+
+#### qplot
+```{r}
+# Examples
+str(mpg)
+
+
+qplot(displ, hwy, data = mpg)
+## Observation: displ is engine size, and hwy stands for highway milage
+## Observation: No title, but xlab and ylab exists]
+## Observation: closed dots, black color
+```
+
+#### qplot, modifying aesthetics 
+```{r}
+qplot(displ, hwy, data = mpg, color = drv)
+## Observation: drv stands for drivetrain of the vehicle
+## Observation: qplot auto colored the different dots, and qplot auto assigned different drv by displ
+## Observation: qplot created a legend automatically and set the colors
+## Observation: We now get a better picture faster. front wheel drives with smaller enginers have better highway miles
+```
+
+
+#### qplot, adding statistics 
+```{r}
+qplot(displ, hwy, data = mpg, geom = c("point", "smooth"))
+## Observation: what we want to add in geom are the points themselves, and a "smooth" line which also includes 95% confidence interval
+```
+
+
+#### qplot, histogram
+```{r}
+qplot(hwy, data = mpg, fill = drv)
+## Observation: Qplot autocreated histogram.
+## Observation: Qplot also colored different drivetrains with different highway miles
+```
+
+
+#### Facets, scatterplots
+```{r}
+qplot(displ, hwy, data = mpg, facets = . ~ drv)
+## Observation: Essentially panels for ggplot, in which the data is seperated on its own rather than one plot for all 3 data points
+## Observation: like above, displ relative to highway miles, but now a plot for each different drive trains
+## Observation: ~ seperates variable on right hand side (determines the columns) with variables on the left (indicates rows)
+```
+#### Facets, histogram
+```{r}
+qplot(hwy, data = mpg, facets = drv ~ ., binwidth = 2)
+## Observation: Same as description for above, but no seperated histograms by the different drivetrains into its own panel
+## Observation: No variable on right hand side, thus three are no columns, only rows.
+## Observation: However, if I did switch to . ~ drv, it would put it by columns instead of rows. Still same plots were displayed
+```
+
+
+
+#### MAACS data set to be used for next several examples.
+#### To be honest, this MAACS example was useless
+```{r}
+## Note: datset was simulated and found online at: https://github.com/lupok2001/datasciencecoursera/blob/master/maacs.Rda
+## open the file (not reading ing) and hit ls() to see that hte file is loaded into environment. 
+## then run str(maacs) to view data frame info
+str(maacs)
+```
+
+###### Maacs histogram of eno
+```{r}
+# Histogram
+qplot(log(eno), data = maacs)
+## Observation: log of that data is shown in x axis
+
+# Histogram, color coded
+qplot(log(eno), data = maacs, fill = mopos)
+```
+
+###### Maacs Density Smooth of eno 
+```{r}
+qplot(log(eno), data = maacs, geom = "density")
+
+qplot(log(eno), data = maacs, geom = "density", color = mopos)
+
+```
+
+###### Maacs Scatterplots. eNO vs PM2.5
+```{r}
+qplot(log(pm25), log(eno), data = maacs)
+## Observation: log of pm25 and eno
+qplot(log(pm25), log(eno), data = maacs, shape = mopos)
+## Observation: same as above, but seperated by mopos with no equal to cirles and yes equal to triangles.
+## Observation: BEtter but still harder, color might be a good option to seperate
+
+qplot(log(pm25), log(eno), data = maacs, color = mopos)
+## Observation: seperated by color instead of shape
+```
+
+###### Maacs Scatterplots. eNO vs PM2.5 regression line
+```{r}
+
+#Include a regression line to the color plots:
+qplot(log(pm25), log(eno), data = maacs, color = mopos) + geom_smooth(method = "lm")
+## Observation: Gives us relationship view between pm25 and eno. 
+```
+
+###### Maacs Scatterplots. eNO vs PM2.5 Facets
+```{r}
+qplot(log(pm25), log(eno), data = maacs, facets = . ~ mopos) + geom_smooth(method = "lm")
+## Observation: Gives us the relationship between no and yes with respect to pm25 and eno, but facets aka paneled plots.
+```
+
+
+
+#### axis limits testing example
+```{r}
+testdata <- data.frame(x = 1:100, y = rnorm(100))
+## Observation: x column from 1 to 100, y column with random numbers 
+testdata[20,2] = 100
+## Observation: Adding outlier
+
+plot(testdata$x, testdata$y, type = "l", ylim = c(-3,3))
+## Observation: First plot
+
+
+g <- ggplot(testdata, aes(x = x, y = y))
+g + geom_line()
+## Observation: Second plot
+## Observation: Because we added that one outlier, plot is not much much differet where it included the outlier and now the plot shows no useful information 
+
+g + geom_line() + ylim(-3,3)
+## Observation: Be careful! What this does is only include the data (aka subsets) that has values within the limit and removes the remaining. It can skew your data.
+
+
+g + geom_line() + coord_cartesian(ylim = c(-3,3))
+## Observation: This now shows us all of the data within those ranges without skipping over data.
+```
+
+
+
+
+
+
+
+# Week 3
+
+## Hierarchical clustering
+
+#### Quick Example
+```{r}
+set.seed(1234)
+par(mar  = c(0,0,0,0))
+xnorm <- rnorm(12, mean = rep(1:3, each = 4), sd = .2)
+ynorm <- rnorm(12, mean = rep(1,2,1, each = 4), sd = .2)
+
+plot(xnorm,ynorm, col = "blue", pch = 19, cex = 1)
+text(xnorm +  .05, ynorm + .05, label = as.character(1:12))
+## Observation: plots with labels on each point
+
+# Add to a  dataframe to cluster
+df <- data.frame(x = xnorm, y = ynorm)
+df
+## Observation: 2 columns (x and y) and the values
+
+dist(df)
+## Observation: Default is euclidean
+## Observation: Displays the difference between pair wise. 
+## Observation: Distance between point 3 and point 1 is .57 and point 3 and point 2 is .24 (so point 2 and 3 is closer than 2 and 1)
+
+
+# We want to take the 2 points that are closest to each other, which is 10 and 11, and merge them into 1 cluster
+# Then we do the same for the next two closest points, which are 12 and 9, and so forth
+
+# Now we want plot this, using Dendogram
+distxy <- dist(df)
+clustered <- hclust(distxy)
+plot(clustered)
+## Observation: The ones that are clustered at the bottom are closer together and clustered first.
+## Observation: So 5 and  6 first,  then that with point 7, then that with  8, and so forth
+
+# Downloaded myplclust script to add colors. From: https://github.com/DataScienceSpecialization/courses/blob/master/04_ExploratoryAnalysis/clusteringExample/myplclust.R
+myplclust(clustered, lab = rep(1:3, each = 4), lab.col = rep(1:3, each = 4))
+## Observation: Cluster 1 is in black, cluster 2 is in red, and cluster 3 is in green
+
+```
+
+
+### Heatmap
+```{r}
+df2 <- data.frame(x = xnorm, y = ynorm)
+set.seed(143)
+dataMatrix <- as.matrix(df2)[sample(1:12),]
+heatmap(dataMatrix)
+## Observation: Provides cluster analysis but also includes color specifications to organize the rows and columns of the table to visualize blocks of the table.
+```
+
+
+## K - means
+
+#### Quick kmeans Example
+```{r}
+## Using same data as before:
+set.seed(1234)
+par(mar  = c(0,0,0,0))
+xnorm2 <- rnorm(12, mean = rep(1:3, each = 4), sd = .2)
+ynorm2 <- rnorm(12, mean = rep(1,2,1, each = 4), sd = .2)
+
+df3 <- data.frame(xnorm2, ynorm2)
+kmeansobj <- kmeans(df3, centers = 3)
+names(kmeansobj)
+kmeansobj
+kmeansobj$cluster
+
+## Observation: names(kmeansobj) shows us there are 9 elements
+## Observation: kmeansobj gives us the description of the objects
+## Observation: kmeansobj$cluster shows us thatt here are 3 clusters (defined by centers = 3) and which points are in which cluster. So first 4 points are in cluster 3, next 4 are in 1, final 4 are in 2
+```
+
+#### Plotting the quick kmeans example
+```{r}
+par(mar  = rep(.2, 4))
+plot(xnorm2, ynorm2, col = kmeansobj$cluster, pch = 19, cex = 1)
+points(kmeansobj$centers, col = 1:3, pch = 3, cex = 3, lwd = 3)
+## Observation: There is a giant + symbol of where the "center" of each group points are.
+```
+
+#### Heatmap of the quick kmeans example
+```{r}
+set.seed(1234)
+kmeansobj2 <- kmeans(df3, center  = 3)
+par(mfrow = c(1,2), mar = c(2, 4, .1, .1))
+image(t(df3)[, nrow(df3):1], yaxt = "n")
+image(t(df3)[, order(kmeansobj2$cluster)], yaxt = "n")
+
+## Observation: Image on  left is the original data
+## Observation: Right hand side  is  the  reordered side where  rows of  data so that  the clusters are  put togeteher
+```
+
+
+
+
+## Dimension Reduction
+
+#### Dimension Reduction example
+```{r}
+set.seed(12345)
+par(mar = rep(.2, 4))
+newMatrix <- matrix(rnorm(400), nrow = 40)
+newMatrix
+## Observation: 40 rows, 10 columns, 400 numbers
+
+image(1:10, 1:40, t(newMatrix)[, nrow(newMatrix):1])
+## Observation: Looks noisy and no real pattern to be seen here.
+
+# Lets view this using a heatmap to see if we can get anything:
+heatmap(newMatrix)
+## Observation: Again, no useful or interesting data.
+
+# What if we randomly add a patern?
+dataMatrix <- newMatrix
+set.seed(678910)
+for (i in 1:40) {
+ # flip a coin
+ coinFlip <- rbinom(1, size = 1, prob = 0.5)
+ # if coin is heads add a common pattern to that row
+ if (coinFlip) {
+ dataMatrix[i,] <- dataMatrix[i, ] + rep(c(0, 3), each = 5)
+ } ## end of if coinflip
+} ## end of for i in 1:140 loop
+
+
+#compare old and new
+image(1:10, 1:40, t(newMatrix)[, nrow(newMatrix):1])
+image(1:10, 1:40, t(dataMatrix)[, nrow(dataMatrix):1])
+## Observation: We can see somewhat of a pattern here in the new image
+
+# Compare heatmap of old and new:
+heatmap(newMatrix)
+heatmap(dataMatrix)
+## Observation: WE can also see a pattern here as well.
+```
+
+#### Dimension Reduction example -- plotting certian rows and columns
+```{r}
+
+hh <- hclust(dist(dataMatrix))
+dataMatrixOrdered <- dataMatrix[hh$order,]
+
+par(mfrow=c(1,3))
+image(t(dataMatrixOrdered)[,nrow(dataMatrixOrdered):1])
+plot(rowMeans(dataMatrixOrdered),40:1,xlab="Row Mean",ylab="Row",pch=19)
+plot(colMeans(dataMatrixOrdered),xlab="Column",ylab="Column Mean",pch=19)
+## Observation: Plot on left - original data, reordered to look
+## Observation: Middle plot - Mean of each row
+## Observation:Plot on the right: Column  and its mean
+## Observation: We can see a pattern here on the rows/means and columns where  as in the beginning there was 0 pattern
+
+
+svd1<- svd(scale(dataMatrixOrdered))
+```
+
+
+#### Dimension Reduction example: Components of the SVD and PCA - (u and v)
+```{r}
+svd1 <- svd(scale(dataMatrixOrdered))
+par(mfrow=c(1,3))
+image(t(dataMatrixOrdered)[,nrow(dataMatrixOrdered):1])
+plot(svd1$u[,1],40:1,xlab="Row",ylab="First left singular vector",pch=19)
+plot(svd1$v[,1],xlab="Column",ylab="First right singular vector",pch=19)
+## Observation: In the middle plot, we can see that from row 17  or so to row 40, the mean is seperated from the other set of rows.
+## Observation: Same for  the first 5 columns  to the second 5 columns. 
+## Observation: Essentially we are looking at where in the data the patterns are based.
+```
+
+
+#### Dimension Reduction example: Components of the SVD - d and variance explained
+```{r}
+svd1 <- svd(scale(dataMatrixOrdered))
+par(mfrow=c(1,2))
+plot(svd1$d,xlab="Column",ylab="Singluar value",pch=19)
+plot(svd1$d^2/sum(svd1$d^2),xlab="Column",ylab="Percent of variance explained",pch=19)
+## Observation: each singular value as representing the percent of the total variation in your data set that's explained by that particular component
+## Observation: Pattern is exact same, but y axis value has changed.
+## Observation: The .4 on the right  means that that one point in the original data accounts for 40%  of the total variance of the entire data.
+```
+
+
+
+
+
+### Face example - variance explained, approximations
+```{r}
+#download.file("https://spark-public.s3.amazonaws.com/dataanalysis/face.rda",destfile="./Tutorial_Files/face.rda",method="curl")
+load("./Tutorial_Files/face.rda")
+image(t(faceData)[,nrow(faceData):1])
+## Observation: Low resolution image of a  face 
+
+# Lets now look at variatiion
+svd1 <- svd(scale(faceData))
+plot(svd1$d^2/sum(svd1$d^2),pch=19,xlab="Singluar vector",ylab="Variance explained")
+## Observation: 1st singular vector is a bout 40%  of total variation
+## Observation: First 5-10 singular  vectors capture  almost the entire variation of the data.
+
+# Create approximations of those variation vectors 
+svd1 <- svd(scale(faceData))
+## %*% is matrix multiplication
+
+## Here svd1$d[1] is a constant
+approx1 <- svd1$u[,1] %*% t(svd1$v[,1]) * svd1$d[1]
+
+## In these examples we need to make the diagonal matrix out of d
+approx5 <- svd1$u[,1:5] %*% diag(svd1$d[1:5])%*% t(svd1$v[,1:5]) 
+approx10 <- svd1$u[,1:10] %*% diag(svd1$d[1:10])%*% t(svd1$v[,1:10]) 
+
+
+# Plot apprximations
+par(mfrow=c(1,4))
+image(t(approx1)[,nrow(approx1):1], main = "a")
+image(t(approx5)[,nrow(approx5):1], main = "b")
+image(t(approx10)[,nrow(approx10):1], main = "c")
+image(t(faceData)[,nrow(faceData):1], main = "d")
+## Observation: Essentially, we are plotting the singular vectors, but increasing the number of vectors corresponding to the vectors of that we retreived.
+## Observation: in the first row, we are  only multiplying the first components of UVD^t
+## Observation: in the second, we use the first 5 components, and so forth
+## image a uses 1 singular vector, b uses 5, c uses 10, and d uses them all, hence the original image.
+
+####Could have also used theb elow to view imaged directly
+## myImage(svd1$u[,1:10] %*% diag(svd1$d[1:10]) %*% t(svd1$v[,1:10]))
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Week 4 - Exploratory Data Analysis using Samsung data set
+
+
+```{r}
+
+# Download file
+Samfile <- "https://github.com/DataScienceSpecialization/courses/blob/master/04_ExploratoryAnalysis/clusteringExample/data/samsungData.rda?raw=true"
+
+  if((!file.exists("./archive/samsungData.rda")))
+  {
+    download.file(Samfile, destfile = "./archive/samsungData.rda",  mode = "wb", method = "curl")
+    if(!file.exists("./archive")){dir.create("./archive")}
+    samsungData_dw_time <- date()
+    print("File downloaded from website")
+  } else if (file.exists("./archive/samsungData.rda")){
+    print(" file found, not downloading!")
+  } else {
+      print("Error locating file or downloading")
+  }
+```
+
+
+```{r}
+# Read file
+ls()
+load("./archive/samsungData.rda")
+names(samsungData[, 1:12])
+
+table(samsungData$activity)
+```
+
+#### Plotting average acceleration for  the first subject
+```{r}
+par(mfrow=c(1, 2), mar = c(5, 4, 1, 1))
+samsungData <- transform(samsungData, activity = factor(activity))
+sub1 <- subset(samsungData, subject == 1)
+sub1
+## Observation: Data  is only for subject  1
+
+plot(sub1[, 1], col = sub1$activity, ylab = names(sub1)[1])
+plot(sub1[, 2], col = sub1$activity, ylab = names(sub1)[2])
+legend("bottomright",legend=unique(sub1$activity),col=unique(sub1$activity), pch = 1)
+## Observation: Body acceleration in  2 different directions, x and y
+## Observation: Each activity is its own color
+## Observation: For activities like standing,  sitting, layinng, data is consistent
+## Observation: But forw alking, walking up ord own,  there is a  good amount of variability for X
+
+# Clustering the average acceleration
+distanceMatrix <- dist(sub1[,1:3])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+## Observation: Messy cluster, no clear pattern. So we have to  look further to extract more information
+## Observation: the dendogram also is not able to distinguish between the different activies
+```
+
+
+###### Plotting max acceleration for the first subject
+```{r}
+par(mfrow=c(1,2))
+plot(sub1[,10],pch=19,col=sub1$activity,ylab=names(sub1)[10])
+plot(sub1[,11],pch=19,col = sub1$activity,ylab=names(sub1)[11])
+legend("bottomright",legend=unique(sub1$activity),col=unique(sub1$activity), pch = 1, cex = .5)
+## Observation: column 10 and 11 represent max_x and max_y. Seperating the colors by the activitym and giving ylabels the name of the column
+## Observation: Similar to the plot for average acceleration, there is not much variability with standing, sitting laying
+## Observation: Similar to the plot for average acceleration, the max acceleration shows lots of variability
+
+# Clustering the max acceleration
+distanceMatrix <- dist(sub1[,10:12])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering,lab.col=unclass(sub1$activity))
+## Observation: There are 2 clear clusters
+## Observation: Left hand  side shows walking, walking up and walking down (blue, turqoise, pink)
+## Observation: Right hand side shows sitting, laying, standing
+## Observation: Compared to the previous cluster, this is more uniform towards the top (hence the 2 clear clusters)
+## Observation: Essentially, this differentiates between moving and non moving exercises, but  if  were were to go further in on moving, its harder to summarize.
+
+```
+
+
+#### Singular Value decomposition (SVD)
+```{r}
+# Running svd on the entire dataset
+
+## Removing the last  2 columns as it is basically labels 
+svd1 = svd(scale(sub1[,-c(562,563)]))
+
+## Plotting
+par(mfrow=c(1,2))
+plot(svd1$u[,1],col=sub1$activity,pch=19)
+plot(svd1$u[,2],col=sub1$activity,pch=19)
+
+## Observation: We can see that svd$u (left) sorted activities by looking at the color
+## Observation: Second singular vectors seems more vague. Seperates megenta from all the other colors and so its not clear what is different here. So lets do something additional and  see if we  can find which right vector is  
+
+
+# Finding max contributer of $v aka max contributer to the variation
+par(mfrow=c(1,1))
+plot(svd1$v[,2], pch = 19)
+
+# Clustering max contributer
+par(mfrow=c(1,1))
+maxContrib <- which.max(svd1$v[,2])
+## Observation: Which of the 500+ featuers contibutes the most
+distanceMatrix <- dist(sub1[, c(10:12,maxContrib)])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering,lab.col=unclass(sub1$activity))
+legend("topright",legend=unique(sub1$activity),col=unique(sub1$activity), pch = 1, cex = 1)
+
+## Observation: Here, we can see much more clearly than before the seperation of the different activities
+    ##  Atleast the seperations involving the moving activities (walking, walkup, walkdown)
+
+
+
+```
+
+
+
+
+# Kmean Clustering with the same data 
+```{r}
+# (nstart = 1, first try)
+kClust <- kmeans(sub1[,-c(562,563)],centers=6)
+table(kClust$cluster,sub1$activity)
+## Observation: Have to choose a starting point. This answer can change and be sub-optimal depending on what you put as your starting point.
+## Observation: 6 centers here becuase we have 6 different activities
+## Observation: Each row corresponds to a clust
+## Observation: Each time we run this, we get different values for each cluster]
+## Observation: Looking at the three right hand columns, R is able to cluster those without error
+## Observation: Looking at the 3 left columns, R has trouble clustering them, thus there clusters with multiple activites such as: laying 18 and sitting 10 for cluster 2
+
+#### (nstart = 1, second try)
+kClust <- kmeans(sub1[,-c(562,563)],centers=6,nstart=1)
+table(kClust$cluster,sub1$activity)
+## Observation: Re running this a second time, we still notice that clusters are not seperated and thus interfere with each activity
+
+# (nstart = 100, first try)
+kClust <- kmeans(sub1[,-c(562,563)],centers=6,nstart=100)
+table(kClust$cluster,sub1$activity)
+## Observation: Still seeing clusters mix
+
+# (nstart = 100, second try)
+kClust <- kmeans(sub1[,-c(562,563)],centers=6,nstart=100)
+table(kClust$cluster,sub1$activity)
+## Observation: Still seeing clusters mix
+```
+
+#### Cluster 1 Variable Centers (corresponds to Laying) 
+```{r}
+plot(kClust$center[1,1:10],pch=19,ylab="Cluster Center",xlab="")
+## Observation: Centre  has positive values for the first 3 features, and negative values for the first 10 values
+```
+
+#### Cluster 1 Variable Centers (Walking) 
+```{r}
+plot(kClust$center[4,1:10],pch=19,ylab="Cluster Center",xlab="")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Week 4 - Exploratory Data Analysis using Air Pollution Dataset
+
+
+
+##Question to answer: are air pollution levels lower now than they were before? 
+```{r}
+# Read file 
+pm1999 <- read.table("./Tutorial_Files/pm25_data/RD_501_88101_1999-0.txt", comment.char = "#", header = FALSE, sep = "|", na.strings = "")
+pm2012 <- read.table("./Tutorial_Files/pm25_data/RD_501_88101_2012-0.txt", comment.char = "#", header = FALSE, sep = "|", na.strings = "")
+## Observation: The comment.char indicates that file contains comments to let R know to not include those. In the file, it is actually column names, so we will have to manually import that.
+
+#estimate memory required
+datasize <-  (1304287)*(28)*8 ## rows * columns * 8
+MemMB <- (datasize/(2^20))    ## size in MB
+MemGB <- (MemMB/(2^10))       ## sie in GB
+MemGtest
+
+head(pm1999)
+## Observation: Lots of NAs are found
+
+
+# Add column names
+cnames1999 <- readLines("./Tutorial_Files/pm25_data/RD_501_88101_1999-0.txt", 1)
+cnames2012 <- readLines("./Tutorial_Files/pm25_data/RD_501_88101_2012-0.txt", 1)
+## Observation: Reading only the first line. We see column names, so lets split it
+    
+    cnames1999 <- strsplit(cnames1999, split = "|", fixed = TRUE)
+    cnames2012 <- strsplit(cnames2012, split = "|", fixed = TRUE)
+    ## Observation: strsplit returned a list, so we only want the first element of the list. The first element of that list contains 28 names.
+
+    names(pm1999) <- cnames1999[[1]]
+    names(pm2012) <- cnames2012[[1]]
+    ## Observation: all of the column names hace been added. However, the column names for some are technically not valid, as it contains spaces. 
+  
+names(pm1999) <- make.names(cnames1999[[1]])
+names(pm2012) <- make.names(cnames2012[[1]])
+## Observation: Every column that had a space has now had it replaced with a '.' seperating. example: 'State Code' --> 'State.Code'
+    
+# Now we want to just pull out our relevant data pm25, which is "Sample.Value"
+data1999 <- pm1999$Sample.Value
+data2012 <- pm2012$Sample.Value
+class(data1999)   ## numeric
+str(data1999)
+summary(data1999) ## Max value of 157 which is too high, also 13217 NA's.
+mean(is.na(data1999))   ##about 11% of the total data are missing
+
+summary(data2012) ## Max value of 908 which is way way too high, also 73133 NA's. This 908 value might be an outlier
+mean(is.na(data2012))   ##about 5% of the total data are missing, negative numbers are also seen!
+## Observation: We do see that the median has decreased from 11.5 to 7.63. Good news!!
+```
+
+
+#### Boxplot of the data
+```{r}
+boxplot(data1999, data2012)
+## Observation: Lots of skew (right skew since most of  those are towards 0) on the data
+## Observation: There are so many values outside of the box that calling log should ease it out. 
+
+boxplot(log10(data1999), log10(data2012))
+## Observation: spread of data has spread, even though the averages have gone down
+```
+
+#### Negative values that were found
+```{r}
+negative1999 <- data1999 < 0
+negative2012 <- data2012 < 0 
+
+str(negative1999); str(negative2012)
+
+sum(negative1999, na.rm = TRUE)
+sum(negative2012, na.rm = TRUE)
+## Observation: None in 1999, but 26474 were found in 2012
+
+# What % of the data is negative? 
+mean(negative2012, na.rm = TRUE)
+## Observation: 2% of the values are negative
+```
+
+#### Dates for those negative values
+```{r}
+dates2012 <- pm2012$Date
+str(dates2012)
+## Observation: Dates are integer by default, so we must convert it.  Format current: YYYYMMDD
+
+# Convert the date:
+dates2012 <- as.Date(as.character(dates2012), format = "%Y%m%d")
+str(dates2012)
+## Observation: Date class and in thi format: YYYY-MM-DD
+
+hist(dates2012, "month")
+## Observation: Most of the data is in the first half of  the year
+
+# Histogram of just negative dates
+hist(dates2012[negative2012], "month")
+## Observation: first half  of the year generally is colder
+
+# Below also shows in months of when negative values are found
+missing.months <- month.name[as.POSIXlt(dates2012)$mon + 1]
+tab <- table(factor(missing.months, levels = month.name))
+tab2 <- round(100 * tab / sum(tab))
+tab2
+```
+
+
+
+
+
+## Question to answer: Has air pollution levels lowered for NY at a certian monitor?
+```{r}
+ny1999 <- unique(subset(pm1999, State.Code == 36, c(County.Code, Site.ID)))
+ny2012 <- unique(subset(pm2012, State.Code == 36, c(County.Code, Site.ID)))
+## Observation: Subsetted the  county code and site id from each dataset with NY data (state code == 36)
+
+
+# Lets combine countycode and side id as one column instead  of 2 seperate
+ny1999 <- paste(ny1999[, 1], ny1999[, 2], sep = ".")
+ny2012 <- paste(ny2012[, 1], ny2012[, 2], sep = ".")
+## Observation: These are now character vector with county.siteid
+
+str(ny1999)
+str(ny2012)
+## Observation: 2012 data only has 18 values where as 1999 has 33
+
+# Same monitors:
+both <- intersect(ny1999, ny2012)
+## Observation: 10 values that are the  same
+```
+
+#### How many observations are in each of these monitors and in both timeperiods?
+```{r}
+## Find how many observations available at each monitor
+pm1999$county.site <- with(pm1999, paste(County.Code, Site.ID, sep = "."))
+pm2012$county.site <- with(pm2012, paste(County.Code, Site.ID, sep = "."))
+cnt0 <- subset(pm1999, State.Code == 36 & county.site %in% both)
+cnt1 <- subset(pm2012, State.Code == 36 & county.site %in% both)
+## Observation: Went  back to original data and subset all data from NY state
+
+
+# Count observation at each county site now:
+count1999 <- sapply(split(cnt0, cnt0$county.site), nrow)  
+count2012 <- sapply(split(cnt1, cnt1$county.site), nrow)  
+count1999
+count2012
+
+
+# Choosing County  63, monitor 2008: 63.2008 as it has 122 in 1999 and 30 in 2012
+both.county <- 63
+both.id <- 2008
+
+## Choose county 63 and side ID 2008
+pm0sub <- subset(pm1999, State.Code == 36 & County.Code == both.county & Site.ID == both.id)
+pm1sub <- subset(pm2012, State.Code == 36 & County.Code == both.county & Site.ID == both.id)
+
+# Lets plot  the above data
+dates0 <- as.Date(as.character(pm0sub$Date), "%Y%m%d")
+x0sub <- pm0sub$Sample.Value
+## Observation: Data  is jumping around, no conclusion can be made for 1999 (seen when plotting)
+## Observation: Data  from  July to Jan is available only (seen when plotting)
+
+dates1 <- as.Date(as.character(pm1sub$Date), "%Y%m%d")
+x1sub <- pm1sub$Sample.Value
+## Observation: Data  is jumping around, no conclusion can be made for 2012 (seen when plotting)
+## Observation: Data for january to end of march is available only. (seen when plotting)
+
+par(mfrow = c(1, 2), mar = c(4, 5, 2, 1))
+plot(dates0, x0sub)
+abline(h = median(x0sub, na.rm = T))
+plot(dates1, x1sub)
+abline(h = median(x1sub, na.rm = T))
+## Observation: Picture is slightly misleading as the median for the rangees are not in the same y axis for each
+## To fix, lets do the following: calcualting the range, then plot using the range, below
+
+    ## Find global range
+    rng <- range(x0sub, x1sub, na.rm = T)
+    par(mfrow = c(1, 2), mar = c(4, 5, 2, 1))
+    plot(dates0, x0sub, pch = 20, ylim = rng, xlab = "", ylab = expression(PM[2.5] * " (" * mu * g/m^3 * ")"))
+    abline(h = median(x0sub, na.rm = T))
+    plot(dates1, x1sub, pch = 20, ylim = rng, xlab = "", ylab = expression(PM[2.5] * " (" * mu * g/m^3 * ")"))
+    abline(h = median(x1sub, na.rm = T))
+    ## Observation: Now with  the new y axis, we see that it actually has gone down.
+    ## Observation: The spread is also smaller
+```
+
+
+#### State level changes individually instead of the entire country
+```{r}
+## Lets caculate the mean  of each state in 1999, then mean of each state in 2012, and compare
+mean1999 <- with(pm1999, tapply(Sample.Value, State.Code, mean, na.rm = TRUE))  
+mean2012 <- with(pm2012, tapply(Sample.Value, State.Code, mean, na.rm = TRUE))  
+
+summary(mean1999)
+summary(mean2012)
+## Observation: Min has gone down, 1st quantile has gone down, median has gone down, mean has gone down, 3rd quantile has gonne down, max has gone down
+
+
+# Creating a dataframe for each year that grabs the mean, then groups it together
+d0 <- data.frame(state = names(mean1999), mean = mean1999)
+d1 <- data.frame(state = names(mean2012), mean = mean2012)
+mrgd <- merge(d0, d1, by = "state")
+## Observation: Mean of 1999 in column 2, mean of 2012 in column 3
+
+# Plot 
+par(mfrow = c(1, 1))
+rng <- range(mrgd[,2], mrgd[,3])
+with(mrgd, plot(rep(1, 52), mrgd[, 2], xlim = c(.5, 2.5), ylim = rng, xaxt = "n", xlab = "", ylab = "State-wide Mean PM"))
+with(mrgd, points(rep(2, 52), mrgd[, 3]))
+segments(rep(1, 52), mrgd[, 2], rep(2, 52), mrgd[, 3])
+axis(1, c(1, 2), c("1999", "2012"))
+## Observation: Interestingly, the most bottom state shot up from 1999 to 2012, while most others seems to have dropped.
+
+# Viewing those states with higher mean
+mrgd[mrgd$mean.x < mrgd$mean.y, ]
+## Observation: States: 15, 31,  35, 40
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
